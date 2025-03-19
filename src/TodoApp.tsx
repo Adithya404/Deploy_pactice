@@ -1,23 +1,43 @@
-import React, { useState } from 'react';
-
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import './Todo.css';
 
 const TodoApp: React.FC = () => {
-  const [tasks, setTasks] = useState<string[]>([]);
+  const [tasks, setTasks] = useState<{ id: number; task: string }[]>([]);
   const [task, setTask] = useState<string>('');
 
-  const handleTaskChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setTask(e.target.value);
-  };
+  useEffect(() => {
+    fetchTasks();
+  }, []);
 
-  const addTask = () => {
-    if (task.trim()) {
-      setTasks([...tasks, task]);
-      setTask('');
+  const fetchTasks = async () => {
+    try {
+      const res = await axios.get('http://localhost:5000/tasks');
+      setTasks(res.data);
+    } catch (err) {
+      console.error('Error fetching tasks:', err);
     }
   };
 
-  const removeTask = (index: number) => {
-    setTasks(tasks.filter((_, i) => i !== index));
+  const addTask = async () => {
+    if (task.trim()) {
+      try {
+        const res = await axios.post('http://localhost:5000/tasks', { task });
+        setTasks([...tasks, res.data]);
+        setTask('');
+      } catch (err) {
+        console.error('Error adding task:', err);
+      }
+    }
+  };
+
+  const removeTask = async (id: number) => {
+    try {
+      await axios.delete(`http://localhost:5000/tasks/${id}`);
+      setTasks(tasks.filter((t) => t.id !== id));
+    } catch (err) {
+      console.error('Error deleting task:', err);
+    }
   };
 
   return (
@@ -27,15 +47,15 @@ const TodoApp: React.FC = () => {
         <input 
           type="text" 
           value={task} 
-          onChange={handleTaskChange} 
+          onChange={(e) => setTask(e.target.value)} 
           placeholder="Add a task" 
         />
         <button onClick={addTask}>Add</button>
       </div>
       <ul className="todo-list">
-        {tasks.map((t, index) => (
-          <li key={index} className="todo-item">
-            {t} <button onClick={() => removeTask(index)}>Remove</button>
+        {tasks.map((t) => (
+          <li key={t.id} className="todo-item">
+            {t.task} <button onClick={() => removeTask(t.id)}>Remove</button>
           </li>
         ))}
       </ul>
