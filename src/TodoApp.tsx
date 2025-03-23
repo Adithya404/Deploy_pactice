@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './Todo.css';
 
+const API_URL=process.env.PUBLIC_BACKEND_URL;
 const TodoApp: React.FC = () => {
   const [tasks, setTasks] = useState<{ id: number; task: string }[]>([]);
   const [task, setTask] = useState<string>('');
@@ -12,7 +13,7 @@ const TodoApp: React.FC = () => {
 
   const fetchTasks = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/tasks');
+      const res = await axios.get(`${API_URL}/tasks`);
       setTasks(res.data);
     } catch (err) {
       console.error('Error fetching tasks:', err);
@@ -22,7 +23,7 @@ const TodoApp: React.FC = () => {
   const addTask = async () => {
     if (task.trim()) {
       try {
-        const res = await axios.post('http://localhost:5000/tasks', { task });
+        const res = await axios.post(`${API_URL}/tasks`, { task });
         setTasks([...tasks, res.data]);
         setTask('');
       } catch (err) {
@@ -33,7 +34,7 @@ const TodoApp: React.FC = () => {
 
   const removeTask = async (id: number) => {
     try {
-      await axios.delete(`http://localhost:5000/tasks/${id}`);
+      await axios.delete(`${API_URL}/tasks/${id}`);
       setTasks(tasks.filter((t) => t.id !== id));
     } catch (err) {
       console.error('Error deleting task:', err);
